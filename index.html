@@ -8,73 +8,201 @@
 <style>
 :root{--bg:#0b1020;--panel:#121a2e;--panel2:#16213a;--border:#263656;--text:#eef4ff;--muted:#9fb0cf;--btn:#1b4d8e;--ok:#55d6a0;--warn:#ffc857;--err:#ff7585}
 *{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#09101e,#0d1427);color:var(--text);font-family:Inter,Arial,Helvetica,sans-serif}
-main{max-width:1420px;margin:auto;padding:24px}h1{margin:0 0 7px;font-size:28px}.muted{color:var(--muted)}
+main{width:100%;max-width:none;margin:0;padding:20px 22px}h1{margin:0 0 7px;font-size:28px}.muted{color:var(--muted)}
 .settings,.card,.panel,.status{background:var(--panel);border:1px solid var(--border);border-radius:14px}
 .settings{padding:15px;margin:18px 0}.settings-grid{display:grid;grid-template-columns:repeat(5,minmax(150px,1fr));gap:12px}.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}.field select,.field input{width:100%;padding:10px;border-radius:8px;border:1px solid #33496e;background:#0d1629;color:var(--text)}
 .drop{display:block;margin:18px 0;padding:30px;text-align:center;border:2px dashed #3c527b;border-radius:16px;background:var(--panel);cursor:pointer}.drop.drag{border-color:#68b7ff;background:#172542}.drop input{display:none}
 .status{padding:12px 14px;color:var(--muted);margin:12px 0}.status.ok{color:var(--ok)}.status.warn{color:var(--warn)}.status.err{color:var(--err)}
 .cards{display:grid;grid-template-columns:repeat(6,minmax(130px,1fr));gap:10px;margin:14px 0}.card{padding:14px}.k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}.v{font-size:19px;font-weight:700;margin-top:5px}
-.panel{margin:14px 0;overflow:hidden}.head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 15px;border-bottom:1px solid var(--border);font-weight:700}.head small{font-weight:400;color:var(--muted)}.plot{height:500px}
+.panel{width:100%;min-width:0;margin:14px 0;overflow:hidden}.head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 15px;border-bottom:1px solid var(--border);font-weight:700}.head small{font-weight:400;color:var(--muted)}.plot{width:100%;min-width:0;height:clamp(460px,58vh,760px)}
 .actions{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}button{padding:10px 14px;border:0;border-radius:9px;background:var(--btn);color:#fff;font-weight:700;cursor:pointer}button:disabled{opacity:.4;cursor:not-allowed}.hidden{display:none!important}
 table{width:100%;border-collapse:collapse}th,td{padding:10px 12px;border-bottom:1px solid var(--border);text-align:right}th:first-child,td:first-child{text-align:left}.note{padding:13px 15px;color:var(--muted);line-height:1.55;font-size:13px}.warnings{margin:0;padding:8px 18px 14px 34px;color:var(--muted);line-height:1.5}.warnings li.warn{color:var(--warn)}.warnings li.err{color:var(--err)}
-@media(max-width:1000px){.settings-grid{grid-template-columns:repeat(2,1fr)}.cards{grid-template-columns:repeat(2,1fr)}.plot{height:420px}}
+.topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}.lang-switch{display:flex;gap:6px;flex:0 0 auto;background:var(--panel);border:1px solid var(--border);border-radius:11px;padding:4px}.lang-btn{min-width:46px;padding:8px 11px;background:transparent;color:var(--muted);border:1px solid transparent}.lang-btn.active{background:var(--btn);color:#fff;border-color:#3565a3}.plot .js-plotly-plot,.plot .plot-container,.plot .svg-container{width:100%!important}.modebar{right:8px!important}@media(max-width:1000px){main{padding:14px 12px}.topbar{align-items:stretch}.settings-grid{grid-template-columns:repeat(2,1fr)}.cards{grid-template-columns:repeat(2,1fr)}.plot{height:clamp(400px,55vh,620px)}}@media(max-width:620px){.topbar{flex-direction:column}.lang-switch{align-self:flex-start}.settings-grid{grid-template-columns:1fr}.plot{height:420px}}
 </style>
 </head>
 <body>
 <main>
-<h1>⚡ Motor / Jeneratör Osiloskop Analizi</h1>
-<div class="muted">TIME + CH1 yeterlidir. CH2 ve CH3 varsa otomatik olarak çok kanallı / üç faz analizine dahil edilir. Analiz tarayıcıda yapılır; seçtiğiniz CSV sunucuya gönderilmez.</div>
+<div class="topbar">
+  <div>
+    <h1 data-i18n="title">⚡ Motor / Jeneratör Osiloskop Analizi</h1>
+    <div class="muted" data-i18n="subtitle">TIME + CH1 yeterlidir. CH2 ve CH3 varsa otomatik olarak çok kanallı / üç faz analizine dahil edilir. Analiz tarayıcıda yapılır; seçtiğiniz CSV sunucuya gönderilmez.</div>
+  </div>
+  <div class="lang-switch" aria-label="Language">
+    <button type="button" class="lang-btn" data-lang="tr">TR</button>
+    <button type="button" class="lang-btn" data-lang="en">EN</button>
+  </div>
+</div>
 
 <div class="settings">
   <div class="settings-grid">
-    <div class="field"><label>CSV'deki TIME birimi</label><select id="timeUnit"><option value="s" selected>saniye (s)</option><option value="ms">milisaniye (ms)</option><option value="us">mikrosaniye (µs)</option></select></div>
-    <div class="field"><label>CSV kanal birimi</label><select id="voltageUnit"><option value="V" selected>Volt (V)</option><option value="mV">mV</option><option value="uV">µV</option></select></div>
-    <div class="field"><label>Prob / ölçek çarpanı</label><input id="voltageMultiplier" type="number" value="1" step="any" min="0.0000001"></div>
-    <div class="field"><label>Beklenen min. frekans (Hz)</label><input id="freqMin" type="number" value="20" step="1" min="0.1"></div>
-    <div class="field"><label>Beklenen max. frekans (Hz)</label><input id="freqMax" type="number" value="1000" step="1" min="1"></div>
+    <div class="field">
+      <label data-i18n="timeUnitLabel">CSV'deki TIME birimi</label>
+      <select id="timeUnit">
+        <option value="s" selected data-i18n="seconds">saniye (s)</option>
+        <option value="ms" data-i18n="milliseconds">milisaniye (ms)</option>
+        <option value="us" data-i18n="microseconds">mikrosaniye (µs)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label data-i18n="voltageUnitLabel">CSV kanal birimi</label>
+      <select id="voltageUnit">
+        <option value="V" selected>Volt (V)</option>
+        <option value="mV">mV</option>
+        <option value="uV">µV</option>
+      </select>
+    </div>
+    <div class="field"><label data-i18n="probeMultiplier">Prob / ölçek çarpanı</label><input id="voltageMultiplier" type="number" value="1" step="any" min="0.0000001"></div>
+    <div class="field"><label data-i18n="minFrequency">Beklenen min. frekans (Hz)</label><input id="freqMin" type="number" value="20" step="1" min="0.1"></div>
+    <div class="field"><label data-i18n="maxFrequency">Beklenen max. frekans (Hz)</label><input id="freqMax" type="number" value="1000" step="1" min="1"></div>
   </div>
-  <div class="note">Grafiklerde zaman her zaman <b>ms</b>, gerilim her zaman <b>V</b> gösterilir. Hesaplamalarda zaman saniyeye, kanal değerleri volta çevrilir. Osiloskop CSV'niz TIME'ı saniye ve kanal değerlerini volt olarak veriyorsa varsayılanları değiştirmeyin.</div>
+  <div class="note" data-i18n-html="unitsNote">Grafiklerde zaman her zaman <b>ms</b>, gerilim her zaman <b>V</b> gösterilir. Hesaplamalarda zaman saniyeye, kanal değerleri volta çevrilir. Osiloskop CSV'niz TIME'ı saniye ve kanal değerlerini volt olarak veriyorsa varsayılanları değiştirmeyin.</div>
 </div>
 
-<label class="drop" id="drop" for="file"><b>CSV / TXT dosyasını seç veya buraya sürükle</b><br><span class="muted">TIME zorunlu • CH1 zorunlu • CH2/CH3 opsiyonel • başta metadata olabilir</span><input id="file" type="file" accept=".csv,.txt,text/csv,text/plain"></label>
-<div id="status" class="status">Dosya bekleniyor.</div>
+<label class="drop" id="drop" for="file">
+  <b data-i18n="dropTitle">CSV / TXT dosyasını seç veya buraya sürükle</b><br>
+  <span class="muted" data-i18n="dropSubtitle">TIME zorunlu • CH1 zorunlu • CH2/CH3 opsiyonel • başta metadata olabilir</span>
+  <input id="file" type="file" accept=".csv,.txt,text/csv,text/plain">
+</label>
+<div id="status" class="status" data-i18n="waitingFile">Dosya bekleniyor.</div>
 
 <section id="results" class="hidden">
 <div class="cards">
-  <div class="card"><div class="k">Örnek</div><div class="v" id="n">—</div></div>
-  <div class="card"><div class="k">Örnekleme</div><div class="v" id="fs">—</div></div>
+  <div class="card"><div class="k" data-i18n="samples">Örnek</div><div class="v" id="n">—</div></div>
+  <div class="card"><div class="k" data-i18n="sampling">Örnekleme</div><div class="v" id="fs">—</div></div>
   <div class="card"><div class="k">dt</div><div class="v" id="dt">—</div></div>
-  <div class="card"><div class="k">Kayıt süresi</div><div class="v" id="dur">—</div></div>
-  <div class="card"><div class="k">Kanallar</div><div class="v" id="channels">—</div></div>
-  <div class="card"><div class="k">CH1 frekans</div><div class="v" id="fr">—</div></div>
+  <div class="card"><div class="k" data-i18n="recordDuration">Kayıt süresi</div><div class="v" id="dur">—</div></div>
+  <div class="card"><div class="k" data-i18n="channels">Kanallar</div><div class="v" id="channels">—</div></div>
+  <div class="card"><div class="k" data-i18n="ch1Frequency">CH1 frekans</div><div class="v" id="fr">—</div></div>
 </div>
 
 <div class="actions">
-  <button id="download" disabled>Analiz CSV indir</button>
-  <button id="pngOverview" disabled>Genel grafik PNG</button>
-  <button id="pngFreq" disabled>Frekans PNG</button>
-  <button id="pngRms" disabled>RMS PNG</button>
-  <button id="pngVf" disabled>Gerilim–frekans PNG</button>
+  <button id="download" disabled data-i18n="downloadCsv">Analiz CSV indir</button>
+  <button id="pngOverview" disabled data-i18n="overviewPng">Genel grafik PNG</button>
+  <button id="pngFreq" disabled data-i18n="frequencyPng">Frekans PNG</button>
+  <button id="pngRms" disabled data-i18n="rmsPng">RMS PNG</button>
+  <button id="pngVf" disabled data-i18n="vfPng">Gerilim–frekans PNG</button>
 </div>
 
-<div class="panel"><div class="head"><span>Tüm ölçüm</span><small>Min/Max korunmuş görüntü • analiz ham veriyle yapılır</small></div><div id="p1" class="plot"></div></div>
-<div class="panel"><div class="head"><span>Elektriksel frekans — zaman</span><small>Pozitif sıfır geçişi + adaptif yumuşatma + aykırı değer reddi</small></div><div id="p2" class="plot"></div></div>
-<div class="panel"><div class="head"><span>Periyot-senkron AC RMS</span><small>DC çıkarılmış ham sinyal, yaklaşık bir elektriksel periyot</small></div><div id="p3" class="plot"></div></div>
-<div class="panel"><div class="head"><span>Jeneratör gerilimi — frekans</span><small id="vfDesc">CH1 RMS vs frekans</small></div><div id="p4" class="plot"></div></div>
-<div class="panel"><div class="head"><span>Yakın dalga görünümü</span><small>Kaydın orta noktasından yaklaşık 30 ms</small></div><div id="p5" class="plot"></div></div>
-<div class="panel" id="balancePanel"><div class="head"><span>Üç faz RMS genlik sapması</span><small>NEMA/IEC voltage-unbalance değildir</small></div><div id="p6" class="plot"></div></div>
-<div class="panel" id="phasePanel"><div class="head"><span>Lokal faz farkları</span><small>CH1 referans; pozitif değer = diğer kanal CH1'e göre gecikiyor</small></div><div id="p7" class="plot"></div></div>
+<div class="panel"><div class="head"><span data-i18n="overviewTitle">Tüm ölçüm</span><small data-i18n="overviewDesc">Min/Max korunmuş görüntü • analiz ham veriyle yapılır</small></div><div id="p1" class="plot"></div></div>
+<div class="panel"><div class="head"><span data-i18n="frequencyTitle">Elektriksel frekans — zaman</span><small data-i18n="frequencyDesc">Pozitif sıfır geçişi + adaptif yumuşatma + aykırı değer reddi</small></div><div id="p2" class="plot"></div></div>
+<div class="panel"><div class="head"><span data-i18n="rmsTitle">Periyot-senkron AC RMS</span><small data-i18n="rmsDesc">DC çıkarılmış ham sinyal, yaklaşık bir elektriksel periyot</small></div><div id="p3" class="plot"></div></div>
+<div class="panel"><div class="head"><span data-i18n="vfTitle">Jeneratör gerilimi — frekans</span><small id="vfDesc" data-i18n="vfDescSingle">CH1 RMS vs frekans</small></div><div id="p4" class="plot"></div></div>
+<div class="panel"><div class="head"><span data-i18n="zoomTitle">Yakın dalga görünümü</span><small data-i18n="zoomDesc">Kaydın orta noktasından yaklaşık 30 ms</small></div><div id="p5" class="plot"></div></div>
+<div class="panel" id="balancePanel"><div class="head"><span data-i18n="balanceTitle">Üç faz RMS genlik sapması</span><small data-i18n="balanceDesc">NEMA/IEC voltage-unbalance değildir</small></div><div id="p6" class="plot"></div></div>
+<div class="panel" id="phasePanel"><div class="head"><span data-i18n="phaseTitle">Lokal faz farkları</span><small data-i18n="phaseDesc">CH1 referans; pozitif değer = diğer kanal CH1'e göre gecikiyor</small></div><div id="p7" class="plot"></div></div>
 
 <div class="panel">
-  <div class="head"><span>Özet ve kalite kontrolleri</span><small>Birimi ve ölçüm topolojisini ayrıca doğrulayın</small></div>
-  <div style="overflow:auto"><table><thead><tr><th>Ölçüt</th><th>Sonuç</th></tr></thead><tbody id="summary"></tbody></table></div>
+  <div class="head"><span data-i18n="summaryTitle">Özet ve kalite kontrolleri</span><small data-i18n="summaryDesc">Birimi ve ölçüm topolojisini ayrıca doğrulayın</small></div>
+  <div style="overflow:auto"><table><thead><tr><th data-i18n="metric">Ölçüt</th><th data-i18n="result">Sonuç</th></tr></thead><tbody id="summary"></tbody></table></div>
   <ul id="warnings" class="warnings"></ul>
-  <div class="note"><b>Mühendislik notu:</b> “Üç faz RMS genlik sapması”, kanalların RMS büyüklüklerinin ortalamadan maksimum yüzde sapmasıdır; resmi NEMA/IEC gerilim dengesizliği ölçütü değildir. Bu yazılım prob oranını, faz-nötr/faz-faz bağlantısını veya osiloskop izolasyonunun güvenliğini doğrulayamaz. Gerçek gerilim değerini sunmadan önce prob/attenuation ölçeğini doğrulayın.</div>
+  <div class="note" data-i18n-html="engineeringNote"><b>Mühendislik notu:</b> “Üç faz RMS genlik sapması”, kanalların RMS büyüklüklerinin ortalamadan maksimum yüzde sapmasıdır; resmi NEMA/IEC gerilim dengesizliği ölçütü değildir. Bu yazılım prob oranını, faz-nötr/faz-faz bağlantısını veya osiloskop izolasyonunun güvenliğini doğrulayamaz. Gerçek gerilim değerini sunmadan önce prob/attenuation ölçeğini doğrulayın.</div>
 </div>
 </section>
 </main>
 <script>
 "use strict";
+
+let currentLang = localStorage.getItem("oscAnalyzerLang") || (navigator.language && navigator.language.toLowerCase().startsWith("en") ? "en" : "tr");
+
+const I18N={
+tr:{
+  pageTitle:"Motor / Jeneratör Osiloskop Analizi",
+  title:"⚡ Motor / Jeneratör Osiloskop Analizi",
+  subtitle:"TIME + CH1 yeterlidir. CH2 ve CH3 varsa otomatik olarak çok kanallı / üç faz analizine dahil edilir. Analiz tarayıcıda yapılır; seçtiğiniz CSV sunucuya gönderilmez.",
+  timeUnitLabel:"CSV'deki TIME birimi",seconds:"saniye (s)",milliseconds:"milisaniye (ms)",microseconds:"mikrosaniye (µs)",
+  voltageUnitLabel:"CSV kanal birimi",probeMultiplier:"Prob / ölçek çarpanı",minFrequency:"Beklenen min. frekans (Hz)",maxFrequency:"Beklenen max. frekans (Hz)",
+  unitsNote:"Grafiklerde zaman her zaman <b>ms</b>, gerilim her zaman <b>V</b> gösterilir. Hesaplamalarda zaman saniyeye, kanal değerleri volta çevrilir. Osiloskop CSV'niz TIME'ı saniye ve kanal değerlerini volt olarak veriyorsa varsayılanları değiştirmeyin.",
+  dropTitle:"CSV / TXT dosyasını seç veya buraya sürükle",dropSubtitle:"TIME zorunlu • CH1 zorunlu • CH2/CH3 opsiyonel • başta metadata olabilir",
+  waitingFile:"Dosya bekleniyor.",samples:"Örnek",sampling:"Örnekleme",recordDuration:"Kayıt süresi",channels:"Kanallar",ch1Frequency:"CH1 frekans",
+  downloadCsv:"Analiz CSV indir",overviewPng:"Genel grafik PNG",frequencyPng:"Frekans PNG",rmsPng:"RMS PNG",vfPng:"Gerilim–frekans PNG",
+  overviewTitle:"Tüm ölçüm",overviewDesc:"Min/Max korunmuş görüntü • analiz ham veriyle yapılır",
+  frequencyTitle:"Elektriksel frekans — zaman",frequencyDesc:"Pozitif sıfır geçişi + adaptif yumuşatma + aykırı değer reddi",
+  rmsTitle:"Periyot-senkron AC RMS",rmsDesc:"DC çıkarılmış ham sinyal, yaklaşık bir elektriksel periyot",
+  vfTitle:"Jeneratör gerilimi — frekans",vfDescSingle:"CH1 RMS vs frekans",vfDesc3:"3 faz ortalama RMS vs medyan elektriksel frekans",
+  zoomTitle:"Yakın dalga görünümü",zoomDesc:"Kaydın orta noktasından yaklaşık 30 ms",
+  balanceTitle:"Üç faz RMS genlik sapması",balanceDesc:"NEMA/IEC voltage-unbalance değildir",
+  phaseTitle:"Lokal faz farkları",phaseDesc:"CH1 referans; pozitif değer = diğer kanal CH1'e göre gecikiyor",
+  summaryTitle:"Özet ve kalite kontrolleri",summaryDesc:"Birimi ve ölçüm topolojisini ayrıca doğrulayın",metric:"Ölçüt",result:"Sonuç",
+  engineeringNote:"<b>Mühendislik notu:</b> “Üç faz RMS genlik sapması”, kanalların RMS büyüklüklerinin ortalamadan maksimum yüzde sapmasıdır; resmi NEMA/IEC gerilim dengesizliği ölçütü değildir. Bu yazılım prob oranını, faz-nötr/faz-faz bağlantısını veya osiloskop izolasyonunun güvenliğini doğrulayamaz. Gerçek gerilim değerini sunmadan önce prob/attenuation ölçeğini doğrulayın.",
+  readingFile:"Dosya okunuyor…",parsingCsv:"CSV ayrıştırılıyor… %{p}",preparingOverview:"Genel grafik hazırlanıyor…",calculatingFrequency:"Frekanslar hesaplanıyor…",calculatingRms:"Periyot-senkron RMS hesaplanıyor…",
+  analysisComplete:"Analiz tamamlandı. %{n} kanal algılandı.",errorPrefix:"Hata: ",
+  axisTime:"Zaman (ms)",axisVoltage:"Gerilim (V)",axisFrequency:"Elektriksel frekans (Hz)",axisAcRmsVoltage:"AC RMS Gerilim (V)",axisRmsVoltage:"RMS Gerilim (V)",axisDeviation:"Sapma (%)",axisPhase:"Faz farkı (°)",
+  trace3Avg:"3 faz ortalama",traceRmsDev:"RMS genlik sapması",traceCh2Phase:"CH2, CH1'e göre",traceCh3Phase:"CH3, CH1'e göre",
+  channelCount:"%{n} kanal",
+  errProbeMultiplier:"Prob / ölçek çarpanı pozitif olmalıdır.",errFreqRange:"Frekans aralığı geçersiz. max > min > 0 olmalıdır.",
+  errHeader:"TIME ve CH1 içeren başlık satırı bulunamadı.",errDelimiter:"CSV ayırıcısı belirlenemedi.",errRequiredColumns:"TIME ve CH1 sütunları zorunludur.",
+  errNotEnoughData:"Yeterli sayıda geçerli TIME + CH1 örneği bulunamadı.",errNotEnoughAfterSort:"Zaman sıralama/tekilleştirme sonrası yeterli veri kalmadı.",errDt:"Örnekleme aralığı hesaplanamadı.",
+  warnCh2Ignored:"CH2 sütunu bulundu ancak geçerli sayısal veri oranı %95'in altında olduğu için analiz dışı bırakıldı.",
+  warnCh3Ignored:"CH3 sütunu bulundu ancak geçerli sayısal veri oranı %95'in altında olduğu için analiz dışı bırakıldı.",
+  warnIrregularTime:"TIME örnekleme aralığı %1'den fazla değişiyor. Frekans hesabı gerçek zaman damgalarını kullanır ancak verinin osiloskop export ayarını kontrol edin.",
+  warnHighFreq:"Beklenen maksimum frekans örnekleme frekansına göre çok yüksek. Nyquist/filtreleme güvenilirliği azalabilir.",
+  warnNoFreq:"CH1 için güvenilir periyot/frekans bulunamadı. Beklenen frekans aralığını ve gerilim ölçeğini kontrol edin.",
+  warnFewPeriods:"Frekans analizi için çok az güvenilir periyot bulundu; sayısal sonuçları yorumlamadan önce dalga şeklini kontrol edin.",
+  warnHighDeviation:"Üç faz RMS genlik sapması medyanı %5'in üzerinde. Bu gerçek dengesizlik, prob ölçek farkı veya ölçüm bağlantısı kaynaklı olabilir.",
+  warnInput:"Giriş varsayımı: TIME=%{time}, kanal=%{unit}, ek çarpan=%{mult}. Çıktı eksenleri ms ve V'dir.",
+  sumTotalRms:"%{ch} tüm kayıt AC RMS",sumReliablePeriods:"CH1 güvenilir periyot sayısı",sumMedianFreq:"CH1 frekans medyanı",
+  sumDevMed:"3 faz RMS genlik sapması (medyan)",sumDevMax:"3 faz RMS genlik sapması (maks.)",
+  sumPhase2:"CH2'nin CH1'e göre fazı (medyan)",sumPhase3:"CH3'ün CH1'e göre fazı (medyan)"
+},
+en:{
+  pageTitle:"Motor / Generator Oscilloscope Analysis",
+  title:"⚡ Motor / Generator Oscilloscope Analysis",
+  subtitle:"TIME + CH1 is sufficient. CH2 and CH3 are automatically included in multi-channel / three-phase analysis when available. Analysis runs locally in your browser; the selected CSV is not uploaded to a server.",
+  timeUnitLabel:"TIME unit in CSV",seconds:"seconds (s)",milliseconds:"milliseconds (ms)",microseconds:"microseconds (µs)",
+  voltageUnitLabel:"CSV channel unit",probeMultiplier:"Probe / scale multiplier",minFrequency:"Expected min. frequency (Hz)",maxFrequency:"Expected max. frequency (Hz)",
+  unitsNote:"Charts always display time in <b>ms</b> and voltage in <b>V</b>. Internally, time is converted to seconds and channel values to volts. If your oscilloscope CSV already exports TIME in seconds and channel values in volts, keep the default settings.",
+  dropTitle:"Select a CSV / TXT file or drop it here",dropSubtitle:"TIME required • CH1 required • CH2/CH3 optional • metadata may precede the data",
+  waitingFile:"Waiting for a file.",samples:"Samples",sampling:"Sampling",recordDuration:"Record duration",channels:"Channels",ch1Frequency:"CH1 frequency",
+  downloadCsv:"Download analysis CSV",overviewPng:"Overview PNG",frequencyPng:"Frequency PNG",rmsPng:"RMS PNG",vfPng:"Voltage–frequency PNG",
+  overviewTitle:"Full measurement",overviewDesc:"Min/Max-preserved view • analysis uses the raw data",
+  frequencyTitle:"Electrical frequency — time",frequencyDesc:"Positive zero crossing + adaptive smoothing + outlier rejection",
+  rmsTitle:"Cycle-synchronous AC RMS",rmsDesc:"DC-removed raw signal, approximately one electrical cycle",
+  vfTitle:"Generator voltage — frequency",vfDescSingle:"CH1 RMS vs frequency",vfDesc3:"Three-phase average RMS vs median electrical frequency",
+  zoomTitle:"Zoomed waveform view",zoomDesc:"Approximately 30 ms around the middle of the record",
+  balanceTitle:"Three-phase RMS magnitude deviation",balanceDesc:"Not the NEMA/IEC voltage-unbalance metric",
+  phaseTitle:"Local phase differences",phaseDesc:"CH1 reference; positive value = the other channel lags CH1",
+  summaryTitle:"Summary and quality checks",summaryDesc:"Also verify the units and measurement topology",metric:"Metric",result:"Result",
+  engineeringNote:"<b>Engineering note:</b> “Three-phase RMS magnitude deviation” is the maximum percentage deviation of channel RMS magnitudes from their mean; it is not an official NEMA/IEC voltage-unbalance metric. This software cannot verify probe ratio, phase-to-neutral/phase-to-phase wiring, or oscilloscope isolation safety. Verify the probe/attenuation scale before presenting real voltage values.",
+  readingFile:"Reading file…",parsingCsv:"Parsing CSV… %{p}",preparingOverview:"Preparing overview plot…",calculatingFrequency:"Calculating frequency…",calculatingRms:"Calculating cycle-synchronous RMS…",
+  analysisComplete:"Analysis complete. %{n} channel(s) detected.",errorPrefix:"Error: ",
+  axisTime:"Time (ms)",axisVoltage:"Voltage (V)",axisFrequency:"Electrical frequency (Hz)",axisAcRmsVoltage:"AC RMS voltage (V)",axisRmsVoltage:"RMS voltage (V)",axisDeviation:"Deviation (%)",axisPhase:"Phase difference (°)",
+  trace3Avg:"Three-phase average",traceRmsDev:"RMS magnitude deviation",traceCh2Phase:"CH2 relative to CH1",traceCh3Phase:"CH3 relative to CH1",
+  channelCount:"%{n} channels",
+  errProbeMultiplier:"Probe / scale multiplier must be positive.",errFreqRange:"Invalid frequency range. max > min > 0 is required.",
+  errHeader:"Could not find a header row containing TIME and CH1.",errDelimiter:"Could not determine the CSV delimiter.",errRequiredColumns:"TIME and CH1 columns are required.",
+  errNotEnoughData:"Not enough valid TIME + CH1 samples were found.",errNotEnoughAfterSort:"Not enough data remained after time sorting/deduplication.",errDt:"Could not calculate the sampling interval.",
+  warnCh2Ignored:"CH2 was found, but less than 95% of its rows contain valid numeric data, so it was excluded from analysis.",
+  warnCh3Ignored:"CH3 was found, but less than 95% of its rows contain valid numeric data, so it was excluded from analysis.",
+  warnIrregularTime:"The TIME sampling interval varies by more than 1%. Frequency calculations use the actual timestamps, but verify the oscilloscope export settings.",
+  warnHighFreq:"The expected maximum frequency is high relative to the sampling frequency. Nyquist/filtering reliability may be reduced.",
+  warnNoFreq:"No reliable CH1 cycles/frequency were detected. Check the expected frequency range and voltage scaling.",
+  warnFewPeriods:"Very few reliable cycles were found for frequency analysis; inspect the waveform before interpreting the numerical results.",
+  warnHighDeviation:"Median three-phase RMS magnitude deviation exceeds 5%. This may indicate real imbalance, probe scaling mismatch, or the measurement connection.",
+  warnInput:"Input assumption: TIME=%{time}, channel=%{unit}, additional multiplier=%{mult}. Output axes are ms and V.",
+  sumTotalRms:"%{ch} full-record AC RMS",sumReliablePeriods:"CH1 reliable cycle count",sumMedianFreq:"CH1 median frequency",
+  sumDevMed:"Three-phase RMS magnitude deviation (median)",sumDevMax:"Three-phase RMS magnitude deviation (max)",
+  sumPhase2:"CH2 phase relative to CH1 (median)",sumPhase3:"CH3 phase relative to CH1 (median)"
+}
+};
+
+function T(key,vars={}){
+  let out=(I18N[currentLang]&&I18N[currentLang][key])||I18N.tr[key]||key;
+  for(const [k,v] of Object.entries(vars))out=out.replaceAll("%{"+k+"}",String(v));
+  return out;
+}
+function applyLanguageStatic(){
+  document.documentElement.lang=currentLang;
+  document.title=T("pageTitle");
+  document.querySelectorAll("[data-i18n]").forEach(el=>el.textContent=T(el.dataset.i18n));
+  document.querySelectorAll("[data-i18n-html]").forEach(el=>el.innerHTML=T(el.dataset.i18nHtml));
+  document.querySelectorAll(".lang-btn").forEach(btn=>btn.classList.toggle("active",btn.dataset.lang===currentLang));
+}
+function resizeAllPlots(){
+  ["p1","p2","p3","p4","p5","p6","p7"].forEach(id=>{
+    const el=$(id);
+    if(el && el.data) Plotly.Plots.resize(el);
+  });
+}
 const BINS=4000, ZOOM_SECONDS=0.030;
 let exportRows=[], currentChannelCount=0, lastAnalysis=null;
 const $=id=>document.getElementById(id);
@@ -92,8 +220,8 @@ function splitLine(s,d){const out=[];let cur="",q=false;for(let i=0;i<s.length;i
 function num(s,d){if(s==null)return NaN;let v=String(s).replace(/^"|"$/g,"").trim();if(d===";"&&v.includes(",")&&!v.includes("."))v=v.replace(",", ".");const n=Number(v);return Number.isFinite(n)?n:NaN}
 function findCol(headers,name){const n=name.toUpperCase();let i=headers.findIndex(h=>h.toUpperCase()===n);if(i>=0)return i;return headers.findIndex(h=>h.toUpperCase().includes(n))}
 function timeScale(){return $("timeUnit").value==="s"?1:$("timeUnit").value==="ms"?1e-3:1e-6}
-function voltageScale(){const u=$("voltageUnit").value,unit=u==="V"?1:u==="mV"?1e-3:1e-6;const mult=Number($("voltageMultiplier").value);if(!(mult>0))throw Error("Prob / ölçek çarpanı pozitif olmalıdır.");return unit*mult}
-function freqLimits(){const min=Number($("freqMin").value),max=Number($("freqMax").value);if(!(min>0&&max>min))throw Error("Frekans aralığı geçersiz. max > min > 0 olmalıdır.");return{min,max}}
+function voltageScale(){const u=$("voltageUnit").value,unit=u==="V"?1:u==="mV"?1e-3:1e-6;const mult=Number($("voltageMultiplier").value);if(!(mult>0))throw Error(T("errProbeMultiplier"));return unit*mult}
+function freqLimits(){const min=Number($("freqMin").value),max=Number($("freqMax").value);if(!(min>0&&max>min))throw Error(T("errFreqRange"));return{min,max}}
 function minmax(t,x,bins=BINS){if(!x)return null;const n=x.length;if(n<=2*bins)return{t:Array.from(t),x:Array.from(x)};const tt=[],xx=[];for(let b=0;b<bins;b++){const s=Math.floor(b*n/bins),e=Math.max(s+1,Math.floor((b+1)*n/bins));let imin=s,imax=s;for(let i=s+1;i<e;i++){if(x[i]<x[imin])imin=i;if(x[i]>x[imax])imax=i}for(const i of [imin,imax].sort((a,b)=>a-b)){tt.push(t[i]);xx.push(x[i])}}return{t:tt,x:xx}}
 function centeredAverage(x,n){n=Math.max(1,Math.floor(n));if(n%2===0)n++;if(n===1)return Float64Array.from(x);const half=n>>1,prefix=new Float64Array(x.length+1);for(let i=0;i<x.length;i++)prefix[i+1]=prefix[i]+x[i];const out=new Float64Array(x.length);for(let i=0;i<x.length;i++){const s=Math.max(0,i-half),e=Math.min(x.length,i+half+1);out[i]=(prefix[e]-prefix[s])/(e-s)}return out}
 function robustRangeSample(x){const step=Math.max(1,Math.floor(x.length/5000)),v=[];for(let i=0;i<x.length;i+=step)if(Number.isFinite(x[i]))v.push(x[i]);if(v.length<10)return 0;v.sort((a,b)=>a-b);return v[Math.floor(.95*(v.length-1))]-v[Math.floor(.05*(v.length-1))]}
@@ -104,14 +232,288 @@ function interpField(rows,t,field){if(!rows||!rows.length)return NaN;if(t<=rows[
 function lowerBound(a,x){let l=0,h=a.length;while(l<h){const m=(l+h)>>1;if(a[m]<x)l=m+1;else h=m}return l}
 function nearestValue(sortedTimes,x){if(!sortedTimes.length)return NaN;const i=lowerBound(sortedTimes,x);if(i<=0)return sortedTimes[0];if(i>=sortedTimes.length)return sortedTimes[sortedTimes.length-1];return Math.abs(sortedTimes[i]-x)<Math.abs(sortedTimes[i-1]-x)?sortedTimes[i]:sortedTimes[i-1]}
 function phaseRows(refTrack,otherCrossings,label){const out=[],times=otherCrossings.map(z=>z.t);for(const r of refTrack){const T=r.endCross-r.startCross;if(!(T>0))continue;const tc=nearestValue(times,r.startCross);if(!Number.isFinite(tc))continue;let d=(tc-r.startCross)/T;while(d>0.5)d-=1;while(d<=-0.5)d+=1;const deg=360*d;if(Math.abs(deg)<=180)out.push({time:r.time,phase:deg,label})}return out}
-async function parse(file){setStatus("Dosya okunuyor…");const text=await file.text(),lines=text.split(/\r?\n/);let hi=-1;for(let i=0;i<lines.length;i++){const u=lines[i].toUpperCase();if(u.includes("TIME")&&u.includes("CH1")){hi=i;break}}if(hi<0)throw Error("TIME ve CH1 içeren başlık satırı bulunamadı.");const hline=lines[hi],candidates=[[",",count(hline,",")],[";",count(hline,";")],["\t",count(hline,"\t")]].sort((a,b)=>b[1]-a[1]);if(candidates[0][1]===0)throw Error("CSV ayırıcısı belirlenemedi.");const d=candidates[0][0],headers=splitLine(hline,d).map(s=>s.replaceAll('"',"").trim()),ti=findCol(headers,"TIME"),c1i=findCol(headers,"CH1"),c2i=findCol(headers,"CH2"),c3i=findCol(headers,"CH3");if(ti<0||c1i<0)throw Error("TIME ve CH1 sütunları zorunludur.");const ts=timeScale(),vs=voltageScale(),base=[];let c2Valid=0,c3Valid=0;for(let i=hi+1;i<lines.length;i++){if(!lines[i].trim())continue;const p=splitLine(lines[i],d),tv=num(p[ti],d),v1=num(p[c1i],d),v2=c2i>=0?num(p[c2i],d):NaN,v3=c3i>=0?num(p[c3i],d):NaN;if(Number.isFinite(tv)&&Number.isFinite(v1)){if(Number.isFinite(v2))c2Valid++;if(Number.isFinite(v3))c3Valid++;base.push([tv*ts,v1*vs,v2*vs,v3*vs])}if(i%20000===0){setStatus("CSV ayrıştırılıyor… %"+Math.round(100*(i-hi)/(lines.length-hi)));await frame()}}if(base.length<100)throw Error("Yeterli sayıda geçerli TIME + CH1 örneği bulunamadı.");const use2=c2i>=0&&c2Valid/base.length>=.95,use3=c3i>=0&&c3Valid/base.length>=.95;let rows=base.filter(r=>(!use2||Number.isFinite(r[2]))&&(!use3||Number.isFinite(r[3])));let monotonic=true;for(let i=1;i<rows.length;i++)if(rows[i][0]<=rows[i-1][0]){monotonic=false;break}if(!monotonic)rows.sort((a,b)=>a[0]-b[0]);const dedup=[];for(const r of rows){if(!dedup.length||r[0]>dedup[dedup.length-1][0])dedup.push(r)}rows=dedup;if(rows.length<100)throw Error("Zaman sıralama/tekilleştirme sonrası yeterli veri kalmadı.");const t=new Float64Array(rows.length),a=new Float64Array(rows.length),b=use2?new Float64Array(rows.length):null,c=use3?new Float64Array(rows.length):null;for(let i=0;i<rows.length;i++){t[i]=rows[i][0];a[i]=rows[i][1];if(b)b[i]=rows[i][2];if(c)c[i]=rows[i][3]}const diffs=[];for(let i=0;i<Math.min(50000,t.length-1);i++){const q=t[i+1]-t[i];if(q>0&&Number.isFinite(q))diffs.push(q)}const dt=median(diffs);if(!(dt>0))throw Error("Örnekleme aralığı hesaplanamadı.");let maxRel=0;for(const q of diffs){const rel=Math.abs(q-dt)/dt;if(rel>maxRel)maxRel=rel}return{t,a,b,c,dt,fs:1/dt,maxDtDeviation:maxRel,ignored2:c2i>=0&&!use2,ignored3:c3i>=0&&!use3}}
+async function parse(file){
+  setStatus(T("readingFile"));
+  const text=await file.text(),lines=text.split(/\r?\n/);
+  let hi=-1;
+  for(let i=0;i<lines.length;i++){
+    const u=lines[i].toUpperCase();
+    if(u.includes("TIME")&&u.includes("CH1")){hi=i;break}
+  }
+  if(hi<0)throw Error(T("errHeader"));
+  const hline=lines[hi],candidates=[[",",count(hline,",")],[";",count(hline,";")],["\t",count(hline,"\t")]].sort((a,b)=>b[1]-a[1]);
+  if(candidates[0][1]===0)throw Error(T("errDelimiter"));
+  const d=candidates[0][0],headers=splitLine(hline,d).map(s=>s.replaceAll('"',"").trim()),
+        ti=findCol(headers,"TIME"),c1i=findCol(headers,"CH1"),c2i=findCol(headers,"CH2"),c3i=findCol(headers,"CH3");
+  if(ti<0||c1i<0)throw Error(T("errRequiredColumns"));
+
+  const ts=timeScale(),vs=voltageScale(),base=[];
+  let c2Valid=0,c3Valid=0;
+  for(let i=hi+1;i<lines.length;i++){
+    if(!lines[i].trim())continue;
+    const p=splitLine(lines[i],d),tv=num(p[ti],d),v1=num(p[c1i],d),
+          v2=c2i>=0?num(p[c2i],d):NaN,v3=c3i>=0?num(p[c3i],d):NaN;
+    if(Number.isFinite(tv)&&Number.isFinite(v1)){
+      if(Number.isFinite(v2))c2Valid++;
+      if(Number.isFinite(v3))c3Valid++;
+      base.push([tv*ts,v1*vs,v2*vs,v3*vs]);
+    }
+    if(i%20000===0){
+      setStatus(T("parsingCsv",{p:Math.round(100*(i-hi)/(lines.length-hi))}));
+      await frame();
+    }
+  }
+  if(base.length<100)throw Error(T("errNotEnoughData"));
+
+  const use2=c2i>=0&&c2Valid/base.length>=.95,use3=c3i>=0&&c3Valid/base.length>=.95;
+  let rows=base.filter(r=>(!use2||Number.isFinite(r[2]))&&(!use3||Number.isFinite(r[3])));
+
+  let monotonic=true;
+  for(let i=1;i<rows.length;i++)if(rows[i][0]<=rows[i-1][0]){monotonic=false;break}
+  if(!monotonic)rows.sort((a,b)=>a[0]-b[0]);
+
+  const dedup=[];
+  for(const r of rows)if(!dedup.length||r[0]>dedup[dedup.length-1][0])dedup.push(r);
+  rows=dedup;
+  if(rows.length<100)throw Error(T("errNotEnoughAfterSort"));
+
+  const t=new Float64Array(rows.length),a=new Float64Array(rows.length),
+        b=use2?new Float64Array(rows.length):null,c=use3?new Float64Array(rows.length):null;
+  for(let i=0;i<rows.length;i++){
+    t[i]=rows[i][0];a[i]=rows[i][1];
+    if(b)b[i]=rows[i][2];
+    if(c)c[i]=rows[i][3];
+  }
+
+  const diffs=[];
+  for(let i=0;i<Math.min(50000,t.length-1);i++){
+    const q=t[i+1]-t[i];
+    if(q>0&&Number.isFinite(q))diffs.push(q);
+  }
+  const dt=median(diffs);
+  if(!(dt>0))throw Error(T("errDt"));
+
+  let maxRel=0;
+  for(const q of diffs){
+    const rel=Math.abs(q-dt)/dt;
+    if(rel>maxRel)maxRel=rel;
+  }
+  return{t,a,b,c,dt,fs:1/dt,maxDtDeviation:maxRel,ignored2:c2i>=0&&!use2,ignored3:c3i>=0&&!use3};
+}
 function addWarning(text,cls=""){const li=document.createElement("li");li.textContent=text;if(cls)li.className=cls;$("warnings").appendChild(li)}
-async function analyze(D){const{t,a,b,c,dt,fs}=D,limits=freqLimits(),channels=[a,b,c].filter(Boolean);currentChannelCount=channels.length;$("warnings").innerHTML="";if(D.ignored2)addWarning("CH2 sütunu bulundu ancak geçerli sayısal veri oranı %95'in altında olduğu için analiz dışı bırakıldı.","warn");if(D.ignored3)addWarning("CH3 sütunu bulundu ancak geçerli sayısal veri oranı %95'in altında olduğu için analiz dışı bırakıldı.","warn");if(D.maxDtDeviation>.01)addWarning("TIME örnekleme aralığı %1'den fazla değişiyor. Frekans hesabı gerçek zaman damgalarını kullanır ancak verinin osiloskop export ayarını kontrol edin.","warn");if(limits.max>=fs/4)addWarning("Beklenen maksimum frekans örnekleme frekansına göre çok yüksek. Nyquist/filtreleme güvenilirliği azalabilir.","warn");setStatus("Genel grafik hazırlanıyor…");const displays=[minmax(t,a),b?minmax(t,b):null,c?minmax(t,c):null],overview=[];["CH1","CH2","CH3"].forEach((name,i)=>{if(displays[i])overview.push({x:displays[i].t.map(v=>v*1000),y:displays[i].x,type:"scattergl",mode:"lines",name,line:{width:1}})});await Plotly.newPlot("p1",overview,layout("Zaman (ms)","Gerilim (V)",true),cfg);await frame();setStatus("Frekanslar hesaplanıyor…");const FT=[freqTrack(t,a,fs,limits),b?freqTrack(t,b,fs,limits):null,c?freqTrack(t,c,fs,limits):null],tracks=FT.map(x=>x?x.rows:null);if(!tracks[0].length)addWarning("CH1 için güvenilir periyot/frekans bulunamadı. Beklenen frekans aralığını ve gerilim ölçeğini kontrol edin.","err");const ftr=[];tracks.forEach((tr,i)=>{if(tr)ftr.push({x:tr.map(r=>r.time*1000),y:tr.map(r=>r.freq),mode:"lines+markers",name:"CH"+(i+1),marker:{size:4}})});await Plotly.newPlot("p2",ftr,layout("Zaman (ms)","Elektriksel frekans (Hz)"),cfg);await frame();setStatus("Periyot-senkron RMS hesaplanıyor…");const RT=[cycleRms(a,tracks[0]),b?cycleRms(b,tracks[1]):null,c?cycleRms(c,tracks[2]):null],rtr=[];RT.forEach((tr,i)=>{if(tr)rtr.push({x:tr.map(r=>r.time*1000),y:tr.map(r=>r.rms),mode:"lines",name:"CH"+(i+1)+" RMS"})});let avgRows=[];if(currentChannelCount===3&&RT.every(x=>x&&x.length)){avgRows=RT[0].map(r=>{const r2=interpField(RT[1],r.time,"rms"),r3=interpField(RT[2],r.time,"rms"),f2=interpField(tracks[1],r.time,"freq"),f3=interpField(tracks[2],r.time,"freq"),fmed=median([r.freq,f2,f3]);return{time:r.time,freq:fmed,avg:(r.rms+r2+r3)/3,r1:r.rms,r2,r3}}).filter(r=>[r.freq,r.avg,r.r1,r.r2,r.r3].every(Number.isFinite));rtr.push({x:avgRows.map(r=>r.time*1000),y:avgRows.map(r=>r.avg),mode:"lines",name:"3 faz ortalama",line:{width:3}})}await Plotly.newPlot("p3",rtr,layout("Zaman (ms)","AC RMS Gerilim (V)",true),cfg);let vfX=[],vfY=[];if(avgRows.length){vfX=avgRows.map(r=>r.freq);vfY=avgRows.map(r=>r.avg);$("vfDesc").textContent="3 faz ortalama RMS vs medyan elektriksel frekans"}else if(RT[0].length){vfX=RT[0].map(r=>r.freq);vfY=RT[0].map(r=>r.rms);$("vfDesc").textContent="CH1 RMS vs CH1 elektriksel frekansı"}await Plotly.newPlot("p4",[{x:vfX,y:vfY,type:"scattergl",mode:"markers",name:"RMS–f",marker:{size:6}}],layout("Elektriksel frekans (Hz)","RMS Gerilim (V)",true),cfg);const mid=(t[0]+t[t.length-1])/2,s=lowerBound(t,mid-ZOOM_SECONDS/2),e=lowerBound(t,mid+ZOOM_SECONDS/2),tz=[];for(let i=s;i<e;i++)tz.push((t[i]-t[s])*1000);const ztr=[{x:tz,y:Array.from(a.slice(s,e)),mode:"lines",name:"CH1"}];if(b)ztr.push({x:tz,y:Array.from(b.slice(s,e)),mode:"lines",name:"CH2"});if(c)ztr.push({x:tz,y:Array.from(c.slice(s,e)),mode:"lines",name:"CH3"});await Plotly.newPlot("p5",ztr,layout("Zaman (ms)","Gerilim (V)",true),cfg);let dev=[];if(avgRows.length){$("balancePanel").classList.remove("hidden");dev=avgRows.map(r=>r.avg>0?100*Math.max(Math.abs(r.r1-r.avg),Math.abs(r.r2-r.avg),Math.abs(r.r3-r.avg))/r.avg:NaN);await Plotly.newPlot("p6",[{x:avgRows.map(r=>r.time*1000),y:dev,mode:"lines",name:"RMS genlik sapması"}],layout("Zaman (ms)","Sapma (%)"),cfg)}else $("balancePanel").classList.add("hidden");let ph12=[],ph13=[];if(currentChannelCount===3&&tracks[0].length&&FT[1].crossings.length&&FT[2].crossings.length){ph12=phaseRows(tracks[0],FT[1].crossings,"CH2-CH1");ph13=phaseRows(tracks[0],FT[2].crossings,"CH3-CH1");$("phasePanel").classList.remove("hidden");await Plotly.newPlot("p7",[{x:ph12.map(r=>r.time*1000),y:ph12.map(r=>r.phase),mode:"lines+markers",name:"CH2 relative CH1"},{x:ph13.map(r=>r.time*1000),y:ph13.map(r=>r.phase),mode:"lines+markers",name:"CH3 relative CH1"}],layout("Zaman (ms)","Faz farkı (°)"),cfg)}else $("phasePanel").classList.add("hidden");exportRows=RT[0].map(r=>{const row={timeMs:r.time*1000,freq:r.freq,ch1:r.rms};if(RT[1]&&RT[1].length)row.ch2=interpField(RT[1],r.time,"rms");if(RT[2]&&RT[2].length)row.ch3=interpField(RT[2],r.time,"rms");if(Number.isFinite(row.ch2)&&Number.isFinite(row.ch3)){row.avg=(row.ch1+row.ch2+row.ch3)/3;row.dev=row.avg>0?100*Math.max(Math.abs(row.ch1-row.avg),Math.abs(row.ch2-row.avg),Math.abs(row.ch3-row.avg))/row.avg:NaN}return row});const fst=stats(tracks[0].map(r=>r.freq));$("n").textContent=t.length.toLocaleString("tr-TR");$("fs").textContent=fs>=1000?(fs/1000).toFixed(2)+" kHz":fs.toFixed(2)+" Hz";$("dt").textContent=dt<.001?(dt*1e6).toFixed(3)+" µs":(dt*1000).toFixed(3)+" ms";$("dur").textContent=((t[t.length-1]-t[0])*1000).toFixed(2)+" ms";$("channels").textContent=currentChannelCount+" kanal";$("fr").textContent=Number.isFinite(fst.min)?fmt(fst.min,1)+"–"+fmt(fst.max,1)+" Hz":"—";const sum=[];sum.push(["CH1 tüm kayıt AC RMS",fmt(acRms(a),6," V")]);if(b)sum.push(["CH2 tüm kayıt AC RMS",fmt(acRms(b),6," V")]);if(c)sum.push(["CH3 tüm kayıt AC RMS",fmt(acRms(c),6," V")]);sum.push(["CH1 güvenilir periyot sayısı",String(tracks[0].length)]);sum.push(["CH1 frekans medyanı",fmt(fst.med,3," Hz")]);if(avgRows.length){const ds=stats(dev);sum.push(["3 faz RMS genlik sapması (medyan)",fmt(ds.med,3," %")]);sum.push(["3 faz RMS genlik sapması (maks.)",fmt(ds.max,3," %")])}if(ph12.length&&ph13.length){sum.push(["CH2'nin CH1'e göre fazı (medyan)",fmt(stats(ph12.map(r=>r.phase)).med,2,"°")]);sum.push(["CH3'ün CH1'e göre fazı (medyan)",fmt(stats(ph13.map(r=>r.phase)).med,2,"°")])}$("summary").innerHTML=sum.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("");if(tracks[0].length<5)addWarning("Frekans analizi için çok az güvenilir periyot bulundu; sayısal sonuçları yorumlamadan önce dalga şeklini kontrol edin.","warn");if(currentChannelCount===3&&dev.length&&stats(dev).med>5)addWarning("Üç faz RMS genlik sapması medyanı %5'in üzerinde. Bu gerçek dengesizlik, prob ölçek farkı veya ölçüm bağlantısı kaynaklı olabilir.","warn");addWarning(`Giriş varsayımı: TIME=${$("timeUnit").value}, kanal=${$("voltageUnit").value}, ek çarpan=${$("voltageMultiplier").value}. Çıktı eksenleri ms ve V'dir.`);$("results").classList.remove("hidden");["download","pngOverview","pngFreq","pngRms","pngVf"].forEach(id=>$(id).disabled=false);lastAnalysis={D,tracks,RT,avgRows,ph12,ph13};setStatus("Analiz tamamlandı. "+currentChannelCount+" kanal algılandı.","ok")}
-async function run(file){if(!file)return;try{$("results").classList.add("hidden");["download","pngOverview","pngFreq","pngRms","pngVf"].forEach(id=>$(id).disabled=true);const D=await parse(file);await analyze(D)}catch(err){console.error(err);setStatus("Hata: "+err.message,"err")}}
+async function analyze(D){
+  const{t,a,b,c,dt,fs}=D,limits=freqLimits(),channels=[a,b,c].filter(Boolean);
+  currentChannelCount=channels.length;
+  $("warnings").innerHTML="";
+
+  if(D.ignored2)addWarning(T("warnCh2Ignored"),"warn");
+  if(D.ignored3)addWarning(T("warnCh3Ignored"),"warn");
+  if(D.maxDtDeviation>.01)addWarning(T("warnIrregularTime"),"warn");
+  if(limits.max>=fs/4)addWarning(T("warnHighFreq"),"warn");
+
+  // Results must be visible before Plotly calculates responsive widths.
+  $("results").classList.remove("hidden");
+  await frame();
+
+  setStatus(T("preparingOverview"));
+  const displays=[minmax(t,a),b?minmax(t,b):null,c?minmax(t,c):null],overview=[];
+  ["CH1","CH2","CH3"].forEach((name,i)=>{
+    if(displays[i])overview.push({
+      x:displays[i].t.map(v=>v*1000),y:displays[i].x,
+      type:"scattergl",mode:"lines",name,line:{width:1}
+    });
+  });
+  await Plotly.newPlot("p1",overview,layout(T("axisTime"),T("axisVoltage"),true),cfg);
+
+  await frame();
+  setStatus(T("calculatingFrequency"));
+  const FT=[freqTrack(t,a,fs,limits),b?freqTrack(t,b,fs,limits):null,c?freqTrack(t,c,fs,limits):null],
+        tracks=FT.map(x=>x?x.rows:null);
+  if(!tracks[0].length)addWarning(T("warnNoFreq"),"err");
+
+  const ftr=[];
+  tracks.forEach((tr,i)=>{
+    if(tr)ftr.push({
+      x:tr.map(r=>r.time*1000),y:tr.map(r=>r.freq),
+      mode:"lines+markers",name:"CH"+(i+1),marker:{size:4}
+    });
+  });
+  await Plotly.newPlot("p2",ftr,layout(T("axisTime"),T("axisFrequency")),cfg);
+
+  await frame();
+  setStatus(T("calculatingRms"));
+  const RT=[cycleRms(a,tracks[0]),b?cycleRms(b,tracks[1]):null,c?cycleRms(c,tracks[2]):null],rtr=[];
+  RT.forEach((tr,i)=>{
+    if(tr)rtr.push({
+      x:tr.map(r=>r.time*1000),y:tr.map(r=>r.rms),
+      mode:"lines",name:"CH"+(i+1)+" RMS"
+    });
+  });
+
+  let avgRows=[];
+  if(currentChannelCount===3&&RT.every(x=>x&&x.length)){
+    avgRows=RT[0].map(r=>{
+      const r2=interpField(RT[1],r.time,"rms"),r3=interpField(RT[2],r.time,"rms"),
+            f2=interpField(tracks[1],r.time,"freq"),f3=interpField(tracks[2],r.time,"freq"),
+            fmed=median([r.freq,f2,f3]);
+      return{time:r.time,freq:fmed,avg:(r.rms+r2+r3)/3,r1:r.rms,r2,r3};
+    }).filter(r=>[r.freq,r.avg,r.r1,r.r2,r.r3].every(Number.isFinite));
+
+    rtr.push({
+      x:avgRows.map(r=>r.time*1000),y:avgRows.map(r=>r.avg),
+      mode:"lines",name:T("trace3Avg"),line:{width:3}
+    });
+  }
+  await Plotly.newPlot("p3",rtr,layout(T("axisTime"),T("axisAcRmsVoltage"),true),cfg);
+
+  let vfX=[],vfY=[];
+  if(avgRows.length){
+    vfX=avgRows.map(r=>r.freq);vfY=avgRows.map(r=>r.avg);
+    $("vfDesc").textContent=T("vfDesc3");
+  }else if(RT[0].length){
+    vfX=RT[0].map(r=>r.freq);vfY=RT[0].map(r=>r.rms);
+    $("vfDesc").textContent=T("vfDescSingle");
+  }
+  await Plotly.newPlot("p4",[{
+    x:vfX,y:vfY,type:"scattergl",mode:"markers",name:"RMS–f",marker:{size:6}
+  }],layout(T("axisFrequency"),T("axisRmsVoltage"),true),cfg);
+
+  const mid=(t[0]+t[t.length-1])/2,
+        s=lowerBound(t,mid-ZOOM_SECONDS/2),e=lowerBound(t,mid+ZOOM_SECONDS/2),tz=[];
+  for(let i=s;i<e;i++)tz.push((t[i]-t[s])*1000);
+  const ztr=[{x:tz,y:Array.from(a.slice(s,e)),mode:"lines",name:"CH1"}];
+  if(b)ztr.push({x:tz,y:Array.from(b.slice(s,e)),mode:"lines",name:"CH2"});
+  if(c)ztr.push({x:tz,y:Array.from(c.slice(s,e)),mode:"lines",name:"CH3"});
+  await Plotly.newPlot("p5",ztr,layout(T("axisTime"),T("axisVoltage"),true),cfg);
+
+  let dev=[];
+  if(avgRows.length){
+    $("balancePanel").classList.remove("hidden");
+    dev=avgRows.map(r=>r.avg>0?100*Math.max(
+      Math.abs(r.r1-r.avg),Math.abs(r.r2-r.avg),Math.abs(r.r3-r.avg)
+    )/r.avg:NaN);
+    await Plotly.newPlot("p6",[{
+      x:avgRows.map(r=>r.time*1000),y:dev,mode:"lines",name:T("traceRmsDev")
+    }],layout(T("axisTime"),T("axisDeviation")),cfg);
+  }else $("balancePanel").classList.add("hidden");
+
+  let ph12=[],ph13=[];
+  if(currentChannelCount===3&&tracks[0].length&&FT[1].crossings.length&&FT[2].crossings.length){
+    ph12=phaseRows(tracks[0],FT[1].crossings,"CH2-CH1");
+    ph13=phaseRows(tracks[0],FT[2].crossings,"CH3-CH1");
+    $("phasePanel").classList.remove("hidden");
+    await Plotly.newPlot("p7",[
+      {x:ph12.map(r=>r.time*1000),y:ph12.map(r=>r.phase),mode:"lines+markers",name:T("traceCh2Phase")},
+      {x:ph13.map(r=>r.time*1000),y:ph13.map(r=>r.phase),mode:"lines+markers",name:T("traceCh3Phase")}
+    ],layout(T("axisTime"),T("axisPhase")),cfg);
+  }else $("phasePanel").classList.add("hidden");
+
+  exportRows=RT[0].map(r=>{
+    const row={timeMs:r.time*1000,freq:r.freq,ch1:r.rms};
+    if(RT[1]&&RT[1].length)row.ch2=interpField(RT[1],r.time,"rms");
+    if(RT[2]&&RT[2].length)row.ch3=interpField(RT[2],r.time,"rms");
+    if(Number.isFinite(row.ch2)&&Number.isFinite(row.ch3)){
+      row.avg=(row.ch1+row.ch2+row.ch3)/3;
+      row.dev=row.avg>0?100*Math.max(
+        Math.abs(row.ch1-row.avg),Math.abs(row.ch2-row.avg),Math.abs(row.ch3-row.avg)
+      )/row.avg:NaN;
+    }
+    return row;
+  });
+
+  const fst=stats(tracks[0].map(r=>r.freq)),
+        locale=currentLang==="tr"?"tr-TR":"en-US";
+  $("n").textContent=t.length.toLocaleString(locale);
+  $("fs").textContent=fs>=1000?(fs/1000).toFixed(2)+" kHz":fs.toFixed(2)+" Hz";
+  $("dt").textContent=dt<.001?(dt*1e6).toFixed(3)+" µs":(dt*1000).toFixed(3)+" ms";
+  $("dur").textContent=((t[t.length-1]-t[0])*1000).toFixed(2)+" ms";
+  $("channels").textContent=T("channelCount",{n:currentChannelCount});
+  $("fr").textContent=Number.isFinite(fst.min)?fmt(fst.min,1)+"–"+fmt(fst.max,1)+" Hz":"—";
+
+  const sum=[];
+  sum.push([T("sumTotalRms",{ch:"CH1"}),fmt(acRms(a),6," V")]);
+  if(b)sum.push([T("sumTotalRms",{ch:"CH2"}),fmt(acRms(b),6," V")]);
+  if(c)sum.push([T("sumTotalRms",{ch:"CH3"}),fmt(acRms(c),6," V")]);
+  sum.push([T("sumReliablePeriods"),String(tracks[0].length)]);
+  sum.push([T("sumMedianFreq"),fmt(fst.med,3," Hz")]);
+
+  if(avgRows.length){
+    const ds=stats(dev);
+    sum.push([T("sumDevMed"),fmt(ds.med,3," %")]);
+    sum.push([T("sumDevMax"),fmt(ds.max,3," %")]);
+  }
+  if(ph12.length&&ph13.length){
+    sum.push([T("sumPhase2"),fmt(stats(ph12.map(r=>r.phase)).med,2,"°")]);
+    sum.push([T("sumPhase3"),fmt(stats(ph13.map(r=>r.phase)).med,2,"°")]);
+  }
+  $("summary").innerHTML=sum.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("");
+
+  if(tracks[0].length<5)addWarning(T("warnFewPeriods"),"warn");
+  if(currentChannelCount===3&&dev.length&&stats(dev).med>5)addWarning(T("warnHighDeviation"),"warn");
+  addWarning(T("warnInput",{
+    time:$("timeUnit").value,unit:$("voltageUnit").value,mult:$("voltageMultiplier").value
+  }));
+
+  ["download","pngOverview","pngFreq","pngRms","pngVf"].forEach(id=>$(id).disabled=false);
+  lastAnalysis={D,tracks,RT,avgRows,ph12,ph13};
+  setStatus(T("analysisComplete",{n:currentChannelCount}),"ok");
+
+  await frame();
+  resizeAllPlots();
+  setTimeout(resizeAllPlots,80);
+}
+async function run(file){
+  if(!file)return;
+  try{
+    $("results").classList.add("hidden");
+    ["download","pngOverview","pngFreq","pngRms","pngVf"].forEach(id=>$(id).disabled=true);
+    const D=await parse(file);
+    await analyze(D);
+  }catch(err){
+    console.error(err);
+    setStatus(T("errorPrefix")+err.message,"err");
+  }
+}
 $("file").addEventListener("change",e=>run(e.target.files[0]));const drop=$("drop");drop.addEventListener("dragover",e=>{e.preventDefault();drop.classList.add("drag")});drop.addEventListener("dragleave",()=>drop.classList.remove("drag"));drop.addEventListener("drop",e=>{e.preventDefault();drop.classList.remove("drag");if(e.dataTransfer.files[0])run(e.dataTransfer.files[0])});
 $("download").addEventListener("click",()=>{if(!exportRows.length)return;const heads=["TIME_ms","FREQUENCY_Hz","CH1_RMS_V"];if(currentChannelCount>=2)heads.push("CH2_RMS_V");if(currentChannelCount>=3)heads.push("CH3_RMS_V","AVERAGE_RMS_V","RMS_MAGNITUDE_DEVIATION_PERCENT");const lines=[heads.join(",")];for(const r of exportRows){const vals=[r.timeMs,r.freq,r.ch1];if(currentChannelCount>=2)vals.push(r.ch2);if(currentChannelCount>=3)vals.push(r.ch3,r.avg,r.dev);lines.push(vals.join(","))}const blob=new Blob([lines.join("\n")],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="motor_jenerator_analiz.csv";a.click();URL.revokeObjectURL(url)});
 function png(plotId,name){Plotly.downloadImage(plotId,{format:"png",filename:name,width:1800,height:1000,scale:1.5})}
 $("pngOverview").onclick=()=>png("p1","01_tum_olcum");$("pngFreq").onclick=()=>png("p2","02_frekans_zaman");$("pngRms").onclick=()=>png("p3","03_rms_zaman");$("pngVf").onclick=()=>png("p4","04_gerilim_frekans");
+
+// ------------------------------------------------------------
+// Language switch
+// ------------------------------------------------------------
+document.querySelectorAll(".lang-btn").forEach(btn=>{
+  btn.addEventListener("click",async()=>{
+    const next=btn.dataset.lang;
+    if(next===currentLang)return;
+
+    currentLang=next;
+    localStorage.setItem("oscAnalyzerLang",currentLang);
+    applyLanguageStatic();
+
+    // If an analysis already exists, redraw it so Plotly axis labels,
+    // warnings and calculated summary text are translated too.
+    if(lastAnalysis && lastAnalysis.D){
+      try{
+        await analyze(lastAnalysis.D);
+      }catch(err){
+        console.error(err);
+        setStatus(T("errorPrefix")+err.message,"err");
+      }
+    }else{
+      setStatus(T("waitingFile"));
+    }
+  });
+});
+
+window.addEventListener("resize",()=>{
+  clearTimeout(window.__plotResizeTimer);
+  window.__plotResizeTimer=setTimeout(resizeAllPlots,80);
+});
+
+// Initial language paint after all HTML and translation definitions exist.
+applyLanguageStatic();
+
 </script>
 </body>
 </html>
