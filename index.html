@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Motor Jeneratör Osiloskop Analizi</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+body{margin:0;background:#0b1020;color:#eef4ff;font-family:Arial,sans-serif}
+main{max-width:1350px;margin:auto;padding:24px}
+h1{margin-bottom:6px}.muted{color:#9fb0cf}
+.drop{display:block;padding:28px;text-align:center;border:2px dashed #3c527b;border-radius:16px;background:#121a2e;cursor:pointer;margin:20px 0}
+input{display:none}.cards{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:14px 0}
+.card,.panel{background:#121a2e;border:1px solid #263656;border-radius:14px}
+.card{padding:14px}.k{font-size:12px;color:#9fb0cf}.v{font-size:20px;font-weight:bold;margin-top:5px}
+.panel{margin:14px 0;overflow:hidden}.head{padding:12px 15px;border-bottom:1px solid #263656;font-weight:bold}
+.plot{height:500px}.status{padding:12px;border-radius:10px;background:#121a2e;color:#9fb0cf;margin:10px 0}
+.hidden{display:none}button{padding:10px 14px;border:0;border-radius:9px;background:#1b4d8e;color:#fff;font-weight:bold;cursor:pointer}
+table{width:100%;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid #263656;text-align:right}th:first-child,td:first-child{text-align:left}
+@media(max-width:800px){.cards{grid-template-columns:repeat(2,1fr)}.plot{height:400px}}
+</style>
+</head>
+<body>
+<main>
+<h1>⚡ Motor / Jeneratör Osiloskop Analizi</h1>
+<div class="muted">CSV tarayıcı içinde işlenir; dosya bir sunucuya yüklenmez.</div>
+
+<label class="drop" for="file">
+<b>CSV / TXT dosyasını seç veya buraya sürükle</b><br>
+<span class="muted">TIME, CH1, CH2, CH3 otomatik bulunur. Metadata satırları olabilir.</span>
+<input id="file" type="file" accept=".csv,.txt">
+</label>
+
+<div id="status" class="status">Dosya bekleniyor.</div>
+
+<section id="results" class="hidden">
+<div class="cards">
+<div class="card"><div class="k">Örnek</div><div class="v" id="n">—</div></div>
+<div class="card"><div class="k">Örnekleme</div><div class="v" id="fs">—</div></div>
+<div class="card"><div class="k">dt</div><div class="v" id="dt">—</div></div>
+<div class="card"><div class="k">Süre</div><div class="v" id="dur">—</div></div>
+<div class="card"><div class="k">Frekans</div><div class="v" id="fr">—</div></div>
+</div>
+
+<button id="download">Analiz CSV indir</button>
+
+<div class="panel"><div class="head">Tüm ölçüm — Min/Max korunmuş görünüm</div><div id="p1" class="plot"></div></div>
+<div class="panel"><div class="head">Elektriksel frekans — zaman</div><div id="p2" class="plot"></div></div>
+<div class="panel"><div class="head">Periyot-senkron RMS</div><div id="p3" class="plot"></div></div>
+<div class="panel"><div class="head">Jeneratör gerilimi — frekans</div><div id="p4" class="plot"></div></div>
+<div class="panel"><div class="head">Yakın üç faz görünümü — kayıt ortasından 30 ms</div><div id="p5" class="plot"></div></div>
+
+<div class="panel">
+<div class="head">Özet</div>
+<table>
+<thead><tr><th>Ölçüt</th><th>Değer</th></tr></thead>
+<tbody id="summary"></tbody>
+</table>
+</div>
+</section>
+</main>
+
+<script>
+const FMIN=20,FMAX=1000,BINS=3500;
+let exportRows=[];
+const $=x=>document.getElementById(x);
+const cfg={responsive:true,displaylogo:false,scrollZoom:true};
+
+function status(s){$("status").textContent=s}
+function med(a){a=[...a].sort((x,y)=>x-y);let m=a.length>>1;return a.length%2?a[m]:(a[m-1]+a[m])/2}
+function avg(a,s=0,e=a.length){let z=0;for(let i=s;i<e;i++)z+=a[i];return z/(e-s)}
+function rms(a,s=0,e=a.length){let m=avg(a,s,e),z=0;for(let i=s;i<e;i++){let d=a[i]-m;z+=d*d}return Math.sqrt(z/(e-s))}
+function fmt(x,d=3){return Number.isFinite(x)?x.toFixed(d):"—"}
+function layout(x,y){return {paper_bgcolor:"#121a2e",plot_bgcolor:"#121a2e",font:{color:"#eef4ff"},margin:{l:70,r:25,t:25,b:60},xaxis:{title:x,gridcolor:"#263656"},yaxis:{title:y,gridcolor:"#263656"},legend:{orientation:"h"},hovermode:"x unified"}}
+
+function splitLine(s,d){
+ let out=[],cur="",q=false;
+ for(let i=0;i<s.length;i++){
+  let c=s[i];
+  if(c=='"'){q=!q}
+  else if(c==d&&!q){out.push(cur.trim());cur=""}
+  else cur+=c
+ }
+ out.push(cur.trim());return out
+}
+function num(s,d){if(s==null)return NaN;s=s.replaceAll('"',"").trim();if(d==";"&&s.includes(",")&&!s.includes("."))s=s.replace(",",".");let v=Number(s);return Number.isFinite(v)?v:NaN}
+function col(h,n){n=n.toUpperCase();let i=h.findIndex(x=>x.toUpperCase()==n);return i>=0?i:h.findIndex(x=>x.toUpperCase().includes(n))}
+
+function minmax(t,x,bins=BINS){
+ if(x.length<=2*bins)return {t:[...t],x:[...x]};
+ let tt=[],xx=[],n=x.length;
+ for(let b=0;b<bins;b++){
+  let s=Math.floor(b*n/bins),e=Math.max(s+1,Math.floor((b+1)*n/bins));
+  let mi=s,ma=s;
+  for(let i=s+1;i<e;i++){if(x[i]<x[mi])mi=i;if(x[i]>x[ma])ma=i}
+  for(let i of [mi,ma].sort((a,b)=>a-b)){tt.push(t[i]);xx.push(x[i])}
+ }
+ return {t:tt,x:xx}
+}
+
+function moving(x,n){
+ n=Math.max(1,Math.floor(n));let o=new Float64Array(x.length),sum=0,left=0;
+ for(let i=0;i<x.length;i++){sum+=x[i];while(i-left+1>n)sum-=x[left++];o[i]=sum/(i-left+1)}
+ return o
+}
+function freqTrack(t,x,fs){
+ let y=moving(x,Math.max(1,Math.round(fs/(FMAX*4)))),dc=avg(y);
+ for(let i=0;i<y.length;i++)y[i]-=dc;
+ let z=[];
+ for(let i=0;i<y.length-1;i++)if(y[i]<0&&y[i+1]>=0){
+  let dy=y[i+1]-y[i];if(!dy)continue;
+  z.push({i:i,t:t[i]-y[i]*(t[i+1]-t[i])/dy})
+ }
+ let r=[];
+ for(let k=0;k<z.length-1;k++){
+  let T=z[k+1].t-z[k].t,f=1/T;
+  if(f>=FMIN&&f<=FMAX)r.push({time:(z[k].t+z[k+1].t)/2,freq:f,i1:z[k].i,i2:z[k+1].i})
+ }
+ return r
+}
+function cycleRows(t,a,b,c,fr){
+ let out=[];
+ for(let q of fr){
+  let s=q.i1,e=q.i2+1;if(e-s<8)continue;
+  let r1=rms(a,s,e),r2=rms(b,s,e),r3=rms(c,s,e),ra=(r1+r2+r3)/3;
+  let dev=100*Math.max(Math.abs(r1-ra),Math.abs(r2-ra),Math.abs(r3-ra))/ra;
+  out.push({time:q.time,freq:q.freq,r1:r1,r2:r2,r3:r3,avg:ra,dev:dev,vf:ra/q.freq})
+ }
+ return out
+}
+function lb(a,x){let l=0,h=a.length;while(l<h){let m=(l+h)>>1;if(a[m]<x)l=m+1;else h=m}return l}
+
+async function parse(file){
+ status("Dosya okunuyor...");
+ let text=await file.text(),lines=text.split(/\r?\n/),hi=-1;
+ for(let i=0;i<lines.length;i++){let u=lines[i].toUpperCase();if(u.includes("TIME")&&u.includes("CH1")){hi=i;break}}
+ if(hi<0)throw Error("TIME/CH1 başlığı bulunamadı.");
+ let hline=lines[hi],opts=[[",",(hline.match(/,/g)||[]).length],[";",(hline.match(/;/g)||[]).length],["\t",(hline.match(/\t/g)||[]).length]].sort((a,b)=>b[1]-a[1]),d=opts[0][0];
+ let h=splitLine(hline,d).map(x=>x.replaceAll('"',"").trim()),ti=col(h,"TIME"),c1=col(h,"CH1"),c2=col(h,"CH2"),c3=col(h,"CH3");
+ if([ti,c1,c2,c3].some(x=>x<0))throw Error("TIME, CH1, CH2, CH3 sütunları bulunamadı.");
+ let t=[],a=[],b=[],c=[];
+ for(let i=hi+1;i<lines.length;i++){
+  if(!lines[i].trim())continue;let p=splitLine(lines[i],d),tv=num(p[ti],d),x=num(p[c1],d),y=num(p[c2],d),z=num(p[c3],d);
+  if([tv,x,y,z].every(Number.isFinite)){if(t.length&&tv<=t[t.length-1])continue;t.push(tv);a.push(x);b.push(y);c.push(z)}
+  if(i%20000==0){status("CSV işleniyor... %"+Math.round(100*(i-hi)/(lines.length-hi)));await new Promise(requestAnimationFrame)}
+ }
+ if(t.length<100)throw Error("Yeterli veri yok.");
+ let dif=[];for(let i=0;i<Math.min(20000,t.length-1);i++){let v=t[i+1]-t[i];if(v>0)dif.push(v)}
+ let dt=med(dif);return {t:Float64Array.from(t),a:Float64Array.from(a),b:Float64Array.from(b),c:Float64Array.from(c),dt:dt,fs:1/dt}
+}
+
+async function analyze(D){
+ let {t,a,b,c,dt,fs}=D;status("Grafikler hazırlanıyor...");
+ let A=minmax(t,a),B=minmax(t,b),C=minmax(t,c);
+ Plotly.newPlot("p1",[
+  {x:A.t,y:A.x,type:"scattergl",mode:"lines",name:"CH1"},
+  {x:B.t,y:B.x,type:"scattergl",mode:"lines",name:"CH2"},
+  {x:C.t,y:C.x,type:"scattergl",mode:"lines",name:"CH3"}],layout("Zaman (s)","Gerilim / genlik"),cfg);
+
+ let f1=freqTrack(t,a,fs),f2=freqTrack(t,b,fs),f3=freqTrack(t,c,fs);
+ Plotly.newPlot("p2",[
+  {x:f1.map(x=>x.time),y:f1.map(x=>x.freq),mode:"lines+markers",name:"CH1"},
+  {x:f2.map(x=>x.time),y:f2.map(x=>x.freq),mode:"lines+markers",name:"CH2"},
+  {x:f3.map(x=>x.time),y:f3.map(x=>x.freq),mode:"lines+markers",name:"CH3"}],layout("Zaman (s)","Frekans (Hz)"),cfg);
+
+ exportRows=cycleRows(t,a,b,c,f1);
+ Plotly.newPlot("p3",[
+  {x:exportRows.map(x=>x.time),y:exportRows.map(x=>x.r1),mode:"lines",name:"CH1 RMS"},
+  {x:exportRows.map(x=>x.time),y:exportRows.map(x=>x.r2),mode:"lines",name:"CH2 RMS"},
+  {x:exportRows.map(x=>x.time),y:exportRows.map(x=>x.r3),mode:"lines",name:"CH3 RMS"},
+  {x:exportRows.map(x=>x.time),y:exportRows.map(x=>x.avg),mode:"lines",name:"Ortalama",line:{width:3}}],layout("Zaman (s)","AC RMS"),cfg);
+
+ Plotly.newPlot("p4",[{x:exportRows.map(x=>x.freq),y:exportRows.map(x=>x.avg),type:"scattergl",mode:"markers",name:"RMS-f"}],layout("Elektriksel frekans (Hz)","Ortalama faz RMS"),cfg);
+
+ let mid=(t[0]+t[t.length-1])/2,s=lb(t,mid-.015),e=lb(t,mid+.015),tz=[],za=[],zb=[],zc=[];
+ for(let i=s;i<e;i++){tz.push((t[i]-t[s])*1000);za.push(a[i]);zb.push(b[i]);zc.push(c[i])}
+ Plotly.newPlot("p5",[
+  {x:tz,y:za,mode:"lines",name:"CH1"},
+  {x:tz,y:zb,mode:"lines",name:"CH2"},
+  {x:tz,y:zc,mode:"lines",name:"CH3"}],layout("Zaman (ms)","Gerilim / genlik"),cfg);
+
+ let freqs=[...f1,...f2,...f3].map(x=>x.freq),fmin=Math.min(...freqs),fmax=Math.max(...freqs),dev=exportRows.map(x=>x.dev);
+ $("n").textContent=t.length.toLocaleString("tr-TR");$("fs").textContent=(fs/1000).toFixed(2)+" kHz";$("dt").textContent=(dt*1e6).toFixed(3)+" µs";$("dur").textContent=(t[t.length-1]-t[0]).toFixed(4)+" s";$("fr").textContent=fmt(fmin,1)+"–"+fmt(fmax,1)+" Hz";
+ $("summary").innerHTML="<tr><td>Tüm kayıt CH1 RMS</td><td>"+fmt(rms(a),6)+"</td></tr><tr><td>Tüm kayıt CH2 RMS</td><td>"+fmt(rms(b),6)+"</td></tr><tr><td>Tüm kayıt CH3 RMS</td><td>"+fmt(rms(c),6)+"</td></tr><tr><td>Faz RMS genlik sapması medyan</td><td>"+fmt(med(dev),3)+" %</td></tr>";
+ $("results").classList.remove("hidden");status("Analiz tamamlandı.");
+}
+
+async function run(file){try{$("results").classList.add("hidden");let D=await parse(file);await analyze(D)}catch(e){console.error(e);status("Hata: "+e.message)}}
+$("file").onchange=e=>run(e.target.files[0]);
+
+let dz=document.querySelector(".drop");
+dz.ondragover=e=>e.preventDefault();
+dz.ondrop=e=>{e.preventDefault();if(e.dataTransfer.files[0])run(e.dataTransfer.files[0])};
+
+$("download").onclick=()=>{
+ if(!exportRows.length)return;
+ let s="TIME_s,FREQUENCY_Hz,CH1_RMS,CH2_RMS,CH3_RMS,AVERAGE_RMS,RMS_DEVIATION_PERCENT,V_PER_HZ\n";
+ s+=exportRows.map(r=>[r.time,r.freq,r.r1,r.r2,r.r3,r.avg,r.dev,r.vf].join(",")).join("\n");
+ let u=URL.createObjectURL(new Blob([s],{type:"text/csv"})),a=document.createElement("a");a.href=u;a.download="analiz.csv";a.click();URL.revokeObjectURL(u)
+};
+</script>
+</body>
+</html>
