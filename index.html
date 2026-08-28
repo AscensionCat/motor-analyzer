@@ -33,27 +33,45 @@ table{width:100%;border-collapse:collapse}th,td{padding:10px 12px;border-bottom:
   </div>
 </div>
 
+<div class="status ok" style="margin-top:14px" data-i18n-html="scopePresetNote">
+<b>Bu veri seti için doğrulanan ölçek:</b> Ham TIME ve kanal değerleri 100.000.000 ile çarpılmış olarak kaydedilmiş. Program önce tüm ham sayıları 100.000.000'a böler; ardından zamanı ms, gerilimi V olarak gösterir.
+</div>
 <div class="settings">
   <div class="settings-grid">
     <div class="field">
-      <label data-i18n="timeUnitLabel">CSV'deki TIME birimi</label>
+      <label data-i18n="datasetDivisorLabel">CSV ölçek böleni</label>
+      <input id="datasetDivisor" type="number" value="100000000" step="1" min="0.0000001">
+    </div>
+    <div class="field">
+      <label data-i18n="timeUnitLabel">Bölme sonrası TIME birimi</label>
       <select id="timeUnit">
         <option value="s" selected data-i18n="seconds">saniye (s)</option>
         <option value="ms" data-i18n="milliseconds">milisaniye (ms)</option>
         <option value="us" data-i18n="microseconds">mikrosaniye (µs)</option>
+        <option value="ns" data-i18n="nanoseconds">nanosaniye (ns)</option>
       </select>
     </div>
     <div class="field">
-      <label data-i18n="voltageUnitLabel">CSV kanal birimi</label>
+      <label data-i18n="voltageUnitLabel">Bölme sonrası kanal birimi</label>
       <select id="voltageUnit">
         <option value="V" selected>Volt (V)</option>
         <option value="mV">mV</option>
         <option value="uV">µV</option>
+        <option value="nV">nV</option>
       </select>
     </div>
-    <div class="field"><label data-i18n="probeMultiplier">Prob / ölçek çarpanı</label><input id="voltageMultiplier" type="number" value="1" step="any" min="0.0000001"></div>
-    <div class="field"><label data-i18n="minFrequency">Beklenen min. frekans (Hz)</label><input id="freqMin" type="number" value="20" step="1" min="0.1"></div>
-    <div class="field"><label data-i18n="maxFrequency">Beklenen max. frekans (Hz)</label><input id="freqMax" type="number" value="1000" step="1" min="1"></div>
+    <div class="field">
+      <label data-i18n="probeMultiplier">Ek prob / ölçek çarpanı</label>
+      <input id="voltageMultiplier" type="number" value="1" step="any" min="0.0000001">
+    </div>
+    <div class="field">
+      <label data-i18n="minFrequency">Beklenen min. frekans (Hz)</label>
+      <input id="freqMin" type="number" value="20" step="1" min="0.1">
+    </div>
+    <div class="field">
+      <label data-i18n="maxFrequency">Beklenen max. frekans (Hz)</label>
+      <input id="freqMax" type="number" value="1000" step="1" min="1">
+    </div>
   </div>
   <div class="note" data-i18n-html="unitsNote">Grafiklerde zaman her zaman <b>ms</b>, gerilim her zaman <b>V</b> gösterilir. Hesaplamalarda zaman saniyeye, kanal değerleri volta çevrilir. Osiloskop CSV'niz TIME'ı saniye ve kanal değerlerini volt olarak veriyorsa varsayılanları değiştirmeyin.</div>
 </div>
@@ -106,12 +124,12 @@ let currentLang = localStorage.getItem("oscAnalyzerLang") || (navigator.language
 
 const I18N={
 tr:{
-  pageTitle:"Motor / Jeneratör Osiloskop Analizi",
+  pageTitle:"Motor / Jeneratör Osiloskop Analizi",scopePresetNote:"<b>Bu veri seti için doğrulanan ölçek:</b> Ham TIME ve kanal değerleri 100.000.000 ile çarpılmış olarak kaydedilmiş. Program önce tüm ham sayıları 100.000.000\'a böler; ardından zamanı ms, gerilimi V olarak gösterir.",
   title:"⚡ Motor / Jeneratör Osiloskop Analizi",
   subtitle:"TIME + CH1 yeterlidir. CH2 ve CH3 varsa otomatik olarak çok kanallı / üç faz analizine dahil edilir. Analiz tarayıcıda yapılır; seçtiğiniz CSV sunucuya gönderilmez.",
-  timeUnitLabel:"CSV'deki TIME birimi",seconds:"saniye (s)",milliseconds:"milisaniye (ms)",microseconds:"mikrosaniye (µs)",
-  voltageUnitLabel:"CSV kanal birimi",probeMultiplier:"Prob / ölçek çarpanı",minFrequency:"Beklenen min. frekans (Hz)",maxFrequency:"Beklenen max. frekans (Hz)",
-  unitsNote:"Grafiklerde zaman her zaman <b>ms</b>, gerilim her zaman <b>V</b> gösterilir. Hesaplamalarda zaman saniyeye, kanal değerleri volta çevrilir. Osiloskop CSV'niz TIME'ı saniye ve kanal değerlerini volt olarak veriyorsa varsayılanları değiştirmeyin.",
+  timeUnitLabel:"CSV'deki TIME birimi",seconds:"saniye (s)",milliseconds:"milisaniye (ms)",microseconds:"mikrosaniye (µs)",nanoseconds:"nanosaniye (ns)",
+  voltageUnitLabel:"Bölme sonrası kanal birimi",probeMultiplier:"Ek prob / ölçek çarpanı",minFrequency:"Beklenen min. frekans (Hz)",maxFrequency:"Beklenen max. frekans (Hz)",
+  unitsNote:"Bu veri setinde ham sayılar <b>100.000.000 ile çarpılmış</b> kaydedildiği için varsayılan bölen 100.000.000\'dır. Örneğin 896894785 → 8.96894785. Bölme sonrasında TIME saniye, kanallar Volt kabul edilir. Grafiklerde zaman <b>ms</b>, gerilim <b>V</b> gösterilir.",
   dropTitle:"CSV / TXT dosyasını seç veya buraya sürükle",dropSubtitle:"TIME zorunlu • CH1 zorunlu • CH2/CH3 opsiyonel • başta metadata olabilir",
   waitingFile:"Dosya bekleniyor.",samples:"Örnek",sampling:"Örnekleme",recordDuration:"Kayıt süresi",channels:"Kanallar",ch1Frequency:"CH1 frekans",
   downloadCsv:"Analiz CSV indir",overviewPng:"Genel grafik PNG",frequencyPng:"Frekans PNG",rmsPng:"RMS PNG",vfPng:"Gerilim–frekans PNG",
@@ -129,7 +147,7 @@ tr:{
   axisTime:"Zaman (ms)",axisVoltage:"Gerilim (V)",axisFrequency:"Elektriksel frekans (Hz)",axisAcRmsVoltage:"AC RMS Gerilim (V)",axisRmsVoltage:"RMS Gerilim (V)",axisDeviation:"Sapma (%)",axisPhase:"Faz farkı (°)",
   trace3Avg:"3 faz ortalama",traceRmsDev:"RMS genlik sapması",traceCh2Phase:"CH2, CH1'e göre",traceCh3Phase:"CH3, CH1'e göre",
   channelCount:"%{n} kanal",
-  errProbeMultiplier:"Prob / ölçek çarpanı pozitif olmalıdır.",errFreqRange:"Frekans aralığı geçersiz. max > min > 0 olmalıdır.",
+  errDatasetDivisor:"CSV ölçek böleni pozitif olmalıdır.",errProbeMultiplier:"Ek prob / ölçek çarpanı pozitif olmalıdır.",errFreqRange:"Frekans aralığı geçersiz. max > min > 0 olmalıdır.",
   errHeader:"TIME ve CH1 içeren başlık satırı bulunamadı.",errDelimiter:"CSV ayırıcısı belirlenemedi.",errRequiredColumns:"TIME ve CH1 sütunları zorunludur.",
   errNotEnoughData:"Yeterli sayıda geçerli TIME + CH1 örneği bulunamadı.",errNotEnoughAfterSort:"Zaman sıralama/tekilleştirme sonrası yeterli veri kalmadı.",errDt:"Örnekleme aralığı hesaplanamadı.",
   warnCh2Ignored:"CH2 sütunu bulundu ancak geçerli sayısal veri oranı %95'in altında olduğu için analiz dışı bırakıldı.",
@@ -145,12 +163,12 @@ tr:{
   sumPhase2:"CH2'nin CH1'e göre fazı (medyan)",sumPhase3:"CH3'ün CH1'e göre fazı (medyan)"
 },
 en:{
-  pageTitle:"Motor / Generator Oscilloscope Analysis",
+  pageTitle:"Motor / Generator Oscilloscope Analysis",scopePresetNote:"<b>Verified scaling for this dataset:</b> Raw TIME and channel values are stored multiplied by 100,000,000. The program first divides all raw values by 100,000,000, then displays time in ms and voltage in V.",
   title:"⚡ Motor / Generator Oscilloscope Analysis",
   subtitle:"TIME + CH1 is sufficient. CH2 and CH3 are automatically included in multi-channel / three-phase analysis when available. Analysis runs locally in your browser; the selected CSV is not uploaded to a server.",
-  timeUnitLabel:"TIME unit in CSV",seconds:"seconds (s)",milliseconds:"milliseconds (ms)",microseconds:"microseconds (µs)",
-  voltageUnitLabel:"CSV channel unit",probeMultiplier:"Probe / scale multiplier",minFrequency:"Expected min. frequency (Hz)",maxFrequency:"Expected max. frequency (Hz)",
-  unitsNote:"Charts always display time in <b>ms</b> and voltage in <b>V</b>. Internally, time is converted to seconds and channel values to volts. If your oscilloscope CSV already exports TIME in seconds and channel values in volts, keep the default settings.",
+  datasetDivisorLabel:"CSV scale divisor",timeUnitLabel:"TIME unit after scaling",seconds:"seconds (s)",milliseconds:"milliseconds (ms)",microseconds:"microseconds (µs)",nanoseconds:"nanoseconds (ns)",
+  voltageUnitLabel:"Channel unit after scaling",probeMultiplier:"Additional probe / scale multiplier",minFrequency:"Expected min. frequency (Hz)",maxFrequency:"Expected max. frequency (Hz)",
+  unitsNote:"Raw values in this dataset are stored <b>multiplied by 100,000,000</b>, so the default divisor is 100,000,000. For example, 896894785 → 8.96894785. After division, TIME is treated as seconds and channels as volts. Charts display time in <b>ms</b> and voltage in <b>V</b>.",
   dropTitle:"Select a CSV / TXT file or drop it here",dropSubtitle:"TIME required • CH1 required • CH2/CH3 optional • metadata may precede the data",
   waitingFile:"Waiting for a file.",samples:"Samples",sampling:"Sampling",recordDuration:"Record duration",channels:"Channels",ch1Frequency:"CH1 frequency",
   downloadCsv:"Download analysis CSV",overviewPng:"Overview PNG",frequencyPng:"Frequency PNG",rmsPng:"RMS PNG",vfPng:"Voltage–frequency PNG",
@@ -168,7 +186,7 @@ en:{
   axisTime:"Time (ms)",axisVoltage:"Voltage (V)",axisFrequency:"Electrical frequency (Hz)",axisAcRmsVoltage:"AC RMS voltage (V)",axisRmsVoltage:"RMS voltage (V)",axisDeviation:"Deviation (%)",axisPhase:"Phase difference (°)",
   trace3Avg:"Three-phase average",traceRmsDev:"RMS magnitude deviation",traceCh2Phase:"CH2 relative to CH1",traceCh3Phase:"CH3 relative to CH1",
   channelCount:"%{n} channels",
-  errProbeMultiplier:"Probe / scale multiplier must be positive.",errFreqRange:"Invalid frequency range. max > min > 0 is required.",
+  errDatasetDivisor:"CSV scale divisor must be positive.",errProbeMultiplier:"Additional probe / scale multiplier must be positive.",errFreqRange:"Invalid frequency range. max > min > 0 is required.",
   errHeader:"Could not find a header row containing TIME and CH1.",errDelimiter:"Could not determine the CSV delimiter.",errRequiredColumns:"TIME and CH1 columns are required.",
   errNotEnoughData:"Not enough valid TIME + CH1 samples were found.",errNotEnoughAfterSort:"Not enough data remained after time sorting/deduplication.",errDt:"Could not calculate the sampling interval.",
   warnCh2Ignored:"CH2 was found, but less than 95% of its rows contain valid numeric data, so it was excluded from analysis.",
@@ -178,7 +196,7 @@ en:{
   warnNoFreq:"No reliable CH1 cycles/frequency were detected. Check the expected frequency range and voltage scaling.",
   warnFewPeriods:"Very few reliable cycles were found for frequency analysis; inspect the waveform before interpreting the numerical results.",
   warnHighDeviation:"Median three-phase RMS magnitude deviation exceeds 5%. This may indicate real imbalance, probe scaling mismatch, or the measurement connection.",
-  warnInput:"Input assumption: TIME=%{time}, channel=%{unit}, additional multiplier=%{mult}. Output axes are ms and V.",
+  warnInput:"Scaling: raw value ÷ %{divisor}; then TIME=%{time}, channel=%{unit}, additional multiplier=%{mult}. Output axes are ms and V.",
   sumTotalRms:"%{ch} full-record AC RMS",sumReliablePeriods:"CH1 reliable cycle count",sumMedianFreq:"CH1 median frequency",
   sumDevMed:"Three-phase RMS magnitude deviation (median)",sumDevMax:"Three-phase RMS magnitude deviation (max)",
   sumPhase2:"CH2 phase relative to CH1 (median)",sumPhase3:"CH3 phase relative to CH1 (median)"
@@ -219,8 +237,22 @@ function count(s,c){return s.split(c).length-1}
 function splitLine(s,d){const out=[];let cur="",q=false;for(let i=0;i<s.length;i++){const ch=s[i];if(ch==='"'){if(q&&s[i+1]==='"'){cur+='"';i++}else q=!q}else if(ch===d&&!q){out.push(cur.trim());cur=""}else cur+=ch}out.push(cur.trim());return out}
 function num(s,d){if(s==null)return NaN;let v=String(s).replace(/^"|"$/g,"").trim();if(d===";"&&v.includes(",")&&!v.includes("."))v=v.replace(",", ".");const n=Number(v);return Number.isFinite(n)?n:NaN}
 function findCol(headers,name){const n=name.toUpperCase();let i=headers.findIndex(h=>h.toUpperCase()===n);if(i>=0)return i;return headers.findIndex(h=>h.toUpperCase().includes(n))}
-function timeScale(){return $("timeUnit").value==="s"?1:$("timeUnit").value==="ms"?1e-3:1e-6}
-function voltageScale(){const u=$("voltageUnit").value,unit=u==="V"?1:u==="mV"?1e-3:1e-6;const mult=Number($("voltageMultiplier").value);if(!(mult>0))throw Error(T("errProbeMultiplier"));return unit*mult}
+function datasetDivisor(){
+  const d=Number($("datasetDivisor").value);
+  if(!(d>0))throw Error(T("errDatasetDivisor"));
+  return d;
+}
+function timeScale(){
+  const u=$("timeUnit").value;
+  return u==="s"?1:u==="ms"?1e-3:u==="us"?1e-6:1e-9;
+}
+function voltageScale(){
+  const u=$("voltageUnit").value;
+  const unit=u==="V"?1:u==="mV"?1e-3:u==="uV"?1e-6:1e-9;
+  const mult=Number($("voltageMultiplier").value);
+  if(!(mult>0))throw Error(T("errProbeMultiplier"));
+  return unit*mult;
+}
 function freqLimits(){const min=Number($("freqMin").value),max=Number($("freqMax").value);if(!(min>0&&max>min))throw Error(T("errFreqRange"));return{min,max}}
 function minmax(t,x,bins=BINS){if(!x)return null;const n=x.length;if(n<=2*bins)return{t:Array.from(t),x:Array.from(x)};const tt=[],xx=[];for(let b=0;b<bins;b++){const s=Math.floor(b*n/bins),e=Math.max(s+1,Math.floor((b+1)*n/bins));let imin=s,imax=s;for(let i=s+1;i<e;i++){if(x[i]<x[imin])imin=i;if(x[i]>x[imax])imax=i}for(const i of [imin,imax].sort((a,b)=>a-b)){tt.push(t[i]);xx.push(x[i])}}return{t:tt,x:xx}}
 function centeredAverage(x,n){n=Math.max(1,Math.floor(n));if(n%2===0)n++;if(n===1)return Float64Array.from(x);const half=n>>1,prefix=new Float64Array(x.length+1);for(let i=0;i<x.length;i++)prefix[i+1]=prefix[i]+x[i];const out=new Float64Array(x.length);for(let i=0;i<x.length;i++){const s=Math.max(0,i-half),e=Math.min(x.length,i+half+1);out[i]=(prefix[e]-prefix[s])/(e-s)}return out}
@@ -247,7 +279,7 @@ async function parse(file){
         ti=findCol(headers,"TIME"),c1i=findCol(headers,"CH1"),c2i=findCol(headers,"CH2"),c3i=findCol(headers,"CH3");
   if(ti<0||c1i<0)throw Error(T("errRequiredColumns"));
 
-  const ts=timeScale(),vs=voltageScale(),base=[];
+  const divisor=datasetDivisor(),ts=timeScale(),vs=voltageScale(),base=[];
   let c2Valid=0,c3Valid=0;
   for(let i=hi+1;i<lines.length;i++){
     if(!lines[i].trim())continue;
@@ -256,7 +288,7 @@ async function parse(file){
     if(Number.isFinite(tv)&&Number.isFinite(v1)){
       if(Number.isFinite(v2))c2Valid++;
       if(Number.isFinite(v3))c3Valid++;
-      base.push([tv*ts,v1*vs,v2*vs,v3*vs]);
+      base.push([(tv/divisor)*ts,(v1/divisor)*vs,(v2/divisor)*vs,(v3/divisor)*vs]);
     }
     if(i%20000===0){
       setStatus(T("parsingCsv",{p:Math.round(100*(i-hi)/(lines.length-hi))}));
@@ -451,7 +483,10 @@ async function analyze(D){
   if(tracks[0].length<5)addWarning(T("warnFewPeriods"),"warn");
   if(currentChannelCount===3&&dev.length&&stats(dev).med>5)addWarning(T("warnHighDeviation"),"warn");
   addWarning(T("warnInput",{
-    time:$("timeUnit").value,unit:$("voltageUnit").value,mult:$("voltageMultiplier").value
+    divisor:$("datasetDivisor").value,
+    time:$("timeUnit").value,
+    unit:$("voltageUnit").value,
+    mult:$("voltageMultiplier").value
   }));
 
   ["download","pngOverview","pngFreq","pngRms","pngVf"].forEach(id=>$(id).disabled=false);
